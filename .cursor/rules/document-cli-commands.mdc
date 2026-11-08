@@ -1,0 +1,34 @@
+---
+description: Keep README command docs in sync whenever a new runnable CLI/script entry point is added
+alwaysApply: true
+---
+
+# Document new test/run commands in README
+
+Whenever you add, rename, or change how to invoke a **runnable entry point** for local testing — including:
+
+- `python -m ...` module CLIs
+- scripts under `modes/`
+- new argparse subcommands on an existing module
+- pytest targets that are meant to be run manually as a smoke/check
+
+you **must** update [README.md](README.md) in the same change.
+
+## What to add
+
+Under the appropriate "Commands by module" (or "Upcoming") section, document:
+
+1. The exact command(s) to run (prefer `.venv` / `python -m ...` forms used in this repo)
+2. A short plain-English description of what it does
+3. At least one concrete example with realistic arguments (URL, query string, flags)
+
+## Do not
+
+- Leave new CLIs only discoverable via `--help`
+- Document secrets or real API keys — point at `.env.example` instead
+- Remove existing command docs unless the entry point was deleted (then remove or mark removed)
+
+## Checklist before finishing the task
+
+- [ ] README lists every new/changed command with an example
+- [ ] Examples match the actual argparse/API surface you shipped
