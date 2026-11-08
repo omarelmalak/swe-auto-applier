@@ -55,6 +55,34 @@ python -m core.knowledge_base search "Python FastAPI React skills"
 
 ---
 
+### `core/dom_parser.py`
+
+Opens a job apply URL with Playwright, isolates form controls, minifies the HTML
+(strips scripts/styles/class noise), and detects whether the current step’s CTA is
+**Next/Continue** or **Submit/Apply**.
+
+```bash
+# Headless parse — prints JSON summary (fields + navigation)
+python -m core.dom_parser "https://boards.greenhouse.io/example/jobs/123"
+
+# Show the browser while parsing
+python -m core.dom_parser "https://jobs.lever.co/example/abcd" --headed
+
+# Write full JSON payload and/or minified HTML to disk
+python -m core.dom_parser "https://example.com/apply" --out /tmp/form.json --html-out /tmp/form.min.html
+```
+
+Navigation `kind` is one of `next` | `submit` | `unknown`. When both Next and Submit
+exist on the page, **Next wins** (multi-step wizard).
+
+Unit tests (no network / no browser):
+
+```bash
+pytest tests/test_dom_parser.py -v
+```
+
+---
+
 ### `config.py`
 
 No CLI. Loaded automatically via `python-dotenv` from `.env`.
@@ -76,20 +104,24 @@ Relevant env vars (see `.env.example`):
 # Knowledge-base unit tests (no live Cohere calls; fake embeddings)
 pytest tests/test_knowledge_base.py -v
 
+# DOM parser unit tests (static HTML; no Playwright launch)
+pytest tests/test_dom_parser.py -v
+
 # All tests
 pytest -v
+```
+
+After `pip install -r requirements.txt`, install browser binaries once:
+
+```bash
+playwright install chromium
 ```
 
 ---
 
 ## Upcoming (Phase 1 — not implemented yet)
 
-These will be added here as each module lands:
-
 ```bash
-# DOM parse a job URL → minified form HTML + navigation (Next vs Submit)
-# python -m core.dom_parser "<job_apply_url>"
-
 # RAG + Cohere → JSON selector/answer map
 # python -m core.llm_router "<job_apply_url>"
 
