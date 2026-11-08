@@ -70,6 +70,11 @@ python -m core.dom_parser "https://jobs.lever.co/example/abcd" --headed
 
 # Write full JSON payload and/or minified HTML to disk
 python -m core.dom_parser "https://example.com/apply" --out /tmp/form.json --html-out /tmp/form.min.html
+
+# Dump raw page HTML + parsed fields (same map the LLM router consumes)
+python -m core.dom_parser "https://jobs.ashbyhq.com/notion/example/application" \
+  --debug-dir data/debug
+# Inspect: data/debug/page.html (raw) and data/debug/parsed_fields.json (our parse)
 ```
 
 Navigation `kind` is one of `next` | `submit` | `unknown`. When both Next and Submit
@@ -107,6 +112,9 @@ pytest tests/test_knowledge_base.py -v
 # DOM parser unit tests (static HTML; no Playwright launch)
 pytest tests/test_dom_parser.py -v
 
+# LLM router unit tests (mocked chat; no live Cohere)
+pytest tests/test_llm_router.py -v
+
 # All tests
 pytest -v
 ```
@@ -119,12 +127,45 @@ playwright install chromium
 
 ---
 
+### `core/llm_router.py`
+
+Parses an apply URL (via the DOM parser), runs **per-field** FAISS retrieval,
+fills obvious contact fields **locally** (email/phone/links/name), attaches
+resume uploads locally, and only then asks Cohere in **small batches of 5
+fields** (each with just that batch’s evidence).
+
+Actions: `fill` / `select` / `upload` / `check` / `skip` / **`unknown`**.
+`unknown` = real question, insufficient evidence — surfaced as **MISSING INFO**
+in the CLI JSON (`missing_info`) and later in the Discord approval card so you
+can supply answers before submit. Unlabeled/opaque controls are auto-`skip`ped
+and never sent to Cohere.
+
+```bash
+# Headless: dumps the full Cohere request (system+user) then the fill plan
+python -m core.llm_router "https://jobs.ashbyhq.com/example/..."
+
+# Show the browser while the form is scraped
+python -m core.llm_router "https://jobs.ashbyhq.com/example/..." --headed
+
+# Skip printing the prompt dump
+python -m core.llm_router "https://jobs.ashbyhq.com/example/..." --quiet
+
+# Save the fill plan
+python -m core.llm_router "https://jobs.ashbyhq.com/example/..." --out /tmp/fill_plan.json
+```
+
+Requires a rebuilt FAISS index (`python -m core.knowledge_base rebuild`) and
+`COHERE_API_KEY` in `.env`.
+
+```bash
+pytest tests/test_llm_router.py -v
+```
+
+---
+
 ## Upcoming (Phase 1 — not implemented yet)
 
 ```bash
-# RAG + Cohere → JSON selector/answer map
-# python -m core.llm_router "<job_apply_url>"
-
 # Visual Chrome fill + multi-step Next loop; pause before Submit
 # python modes/manual_apply.py "<job_apply_url>"
 ```

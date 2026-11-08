@@ -7,6 +7,7 @@ __pycache__/
 .mypy_cache/
 data/faiss_index/*
 !data/faiss_index/.gitkeep
+data/debug/
 jobs.db
 *.log
 .DS_Store
