@@ -1,0 +1,12 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+data/faiss_index/*
+!data/faiss_index/.gitkeep
+jobs.db
+*.log
+.DS_Store
